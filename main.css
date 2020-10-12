@@ -1,0 +1,19 @@
+body{
+  background-color: red;
+}
+label {
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+#pokeball{
+  width: 100px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.select-container {
+  margin: 50px;
+}
