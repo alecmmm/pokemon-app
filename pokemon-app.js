@@ -14,6 +14,18 @@ var selectorVariables = [[],[]];
 'select *');
   dataTable = createTable(await getQuery());
   typeCoordinates = getTypeCoordinates()
+  // TODO: move to other function
+  colorScale = d3.scaleOrdinal(Object.keys(typeCoordinates),
+    ["#A8A878","#C03028","#A890F0","#A040A0","#E0C068","#B8A038","#A8B820",
+    "#705898","#B8B8D0","#F08030","#6890F0","#78C850","#F8D030","#F85888",
+    "#98D8D8","#7038F8","#705848","#EE99AC"])
+
+  // var array1 = [1,2]
+  //
+  // var array2 = [null]
+  //
+  // console.log(array1.concat(array2));
+
 
   setUpUI();
 
@@ -133,7 +145,6 @@ function stringifyTypes(types) {
   var res = [];
   for (var i = 0; i < types.length; i++) {
     res.push(getFirstKey(types[i]));
-    res.push(getFirstValue(types[i]));
   }
   return res;
 }
@@ -142,6 +153,9 @@ function stringifyTypes(types) {
 * filter types by effect level (e.g. > 1x or == 0x)
 */
 function filterTypesByEffect(types, operator, num) {
+  if (types == null) {
+    return []
+  }
   res = cloneArray(types)
   for (var i = 0; i < res.length; i++) {
     if (!eval(res[i][getFirstKey(res[i])] + " " + operator + " " + num)) {
@@ -154,19 +168,35 @@ return res.filter(type => Object.keys(type).length !== 0)
 /*
 * Gets all the stats related to two type searches
 */
+// TODO: monster of a function
 function getAllStats(searchType1, searchType2) {
   var types1 = filterTypes(searchType1, 'DEFENDING')
   var types2 = filterTypes(searchType2, 'DEFENDING')
   if (types2 != null) {
     types1 = multiplyTypes(types1, types2)
   }
-  displayTypes(stringifyTypes(filterTypesByEffect(types1, "==", 2)), "#defenseDisplay", "2X")
+  // defense getAllStats
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 4)), "#defenseDisplay", "4X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 2)), "#defenseDisplay", "2X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 1)), "#defenseDisplay", "1X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.5)), "#defenseDisplay", "1_2X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.25)), "#defenseDisplay", "1_4X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0)), "#defenseDisplay", "0X")
 
-  // filterTypesByEffect(types1, "==", 2)
-  // filterTypesByEffect(types1, "==", 1)
-  // filterTypesByEffect(types1, "==", 0.4)
-  // filterTypesByEffect(types1, "==", 0.25)
-  // filterTypesByEffect(types1, "==", 0)
+  // types1 = filterTypes(searchType1, 'ATTACKING')
+  // types2 = filterTypes(searchType2, 'ATTACKING')
+
+  types1 = removeDups(filterTypes(searchType1, 'ATTACKING')
+    .concat(filterTypes(searchType2, 'ATTACKING'))
+    .filter((el) => {return el != null;}))
+
+  // attack stats
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 4)), "#attackDisplay", "4X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 2)), "#attackDisplay", "2X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 1)), "#attackDisplay", "1X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.5)), "#attackDisplay", "1_2X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.25)), "#attackDisplay", "1_4X")
+  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0)), "#attackDisplay", "0X")
 
 }
 
@@ -188,6 +218,15 @@ function getFirstValue(object) {
   return object[getFirstKey(object)]
 }
 
+/*
+* Removes duplicate objects from array.
+* Note, that order of keys affects what is
+* considered unique. e.g. {a: 1, b: 2} != {b: 2, a: 1}
+*/
+function removeDups(array) {
+  return Array.from(new Set(array.map(JSON.stringify))).map(JSON.parse)
+}
+
 function cloneArray(array) {
   return JSON.parse(JSON.stringify(array));
 }
@@ -198,28 +237,54 @@ function cloneArray(array) {
 *  USER INTERFACE
 */
 {
+// Global variables
+var colorScale
 
 // attach change functions to sensors
 function setUpUI() {
     $("#selector1").selectmenu({
     change: function(event, ui) {
-          // TODO: too many wrapped functions
-      // displayTypes(stringifyTypes(filterTypesByEffect(filterTypes(ui.item.value,'DEFENDING'), "==", 0)),"#defenseDisplay", "1X");
       selectorVariables[0][0] = ui.item.value
-      getAllStats(selectorVariables[0][0],selectorVariables[0][1])
+      getAllStats(selectorVariables[0][0], selectorVariables[0][1])
     }
   });
     $("#selector2").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][1] = ui.item.value
-      getAllStats(selectorVariables[0][0],selectorVariables[0][1])
+      getAllStats(selectorVariables[0][0], selectorVariables[0][1])
     }
   });
 }
 
 function displayTypes(types, id, title) {
-  $(id + " h1").text(title)
-  $(id + " p").text(types)
+  // if null, erase
+  if (types === undefined || types.length == 0) {
+    $(id + " ." + title + " h1").text("")
+    $(id + " ." + title + " p").text("")
+  }
+  else {
+    $(id + " ." + title + " h1").text(title.replace("_","/"))
+    $(id + " ." + title + " p").text(types)
+  }
+  }
 
+/*
+* Display types in specific id element and add header text
+*/
+function displayTypesX(types, id, title) {
+  // blank slate
+  $(id + " ." + title + " p").html("")
+  // if null, erase
+  if (types === undefined || types.length == 0) {
+    $(id + " ." + title).css("display","none")
+  }
+  else {
+    $(id + " ." + title).css("display","flex")
+    types.forEach((type) => {
+      $(id + " ." + title + " p").append('<div class=typeBox style="background:'
+      + colorScale(type) + ';">' + type + ' </div>')
+    });
+
+  }
   }
 }
