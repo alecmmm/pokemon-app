@@ -20,17 +20,17 @@ var selectorVariables = [[],[]];
     "#705898","#B8B8D0","#F08030","#6890F0","#78C850","#F8D030","#F85888",
     "#98D8D8","#7038F8","#705848","#EE99AC"])
 
-  // var array1 = [1,2]
-  //
-  // var array2 = [null]
-  //
-  // console.log(array1.concat(array2));
-
 
   setUpUI();
+  // run stats once at beginning4
+
+
 
 })();
 
+/*
+* GOOGLE SHEETS INTERACTIONS
+*/
 // set up google visualization query
 function setUpQuery(sheetLocation, queryStatement) {
    var promise = new Promise(function(resolve, reject) {
@@ -90,7 +90,6 @@ function formatFraction(fraction) {
   }
 }
 
-
 function getTypeCoordinates() {
   var coordinates = {}
   for (var i = 1; i < dataTable.length; i++) {
@@ -130,6 +129,10 @@ function filterTypes(searchType, searchCond) {
 
 // multiply defense types to get combined effects
 function multiplyTypes(defenseTypes1, defenseTypes2) {
+  if(!defenseTypes2){
+    return defenseTypes1
+  }
+
   var res = cloneArray(defenseTypes1)
   for (var i = 0; i < res.length; i++) {
     // TODO: may need to sort to garuntee same order before we multiply
@@ -170,33 +173,34 @@ return res.filter(type => Object.keys(type).length !== 0)
 */
 // TODO: monster of a function
 function getAllStats(searchType1, searchType2) {
-  var types1 = filterTypes(searchType1, 'DEFENDING')
-  var types2 = filterTypes(searchType2, 'DEFENDING')
-  if (types2 != null) {
-    types1 = multiplyTypes(types1, types2)
-  }
+
+  var res = multiplyTypes(filterTypes(searchType1, 'DEFENDING'),
+    filterTypes(searchType2, 'DEFENDING'))
+
   // defense getAllStats
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 4)), "#defenseDisplay", "4X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 2)), "#defenseDisplay", "2X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 1)), "#defenseDisplay", "1X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.5)), "#defenseDisplay", "1_2X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.25)), "#defenseDisplay", "1_4X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0)), "#defenseDisplay", "0X")
+  getAllEffects(res, "#defenseDisplay")
 
-  // types1 = filterTypes(searchType1, 'ATTACKING')
-  // types2 = filterTypes(searchType2, 'ATTACKING')
+  // attack stats 1
+  getAllEffects(filterTypes(searchType1, 'ATTACKING'), "#attackDisplay1")
 
-  types1 = removeDups(filterTypes(searchType1, 'ATTACKING')
-    .concat(filterTypes(searchType2, 'ATTACKING'))
-    .filter((el) => {return el != null;}))
+  res = filterTypes(searchType2, 'ATTACKING')
 
-  // attack stats
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 4)), "#attackDisplay", "4X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 2)), "#attackDisplay", "2X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 1)), "#attackDisplay", "1X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.5)), "#attackDisplay", "1_2X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0.25)), "#attackDisplay", "1_4X")
-  displayTypesX(stringifyTypes(filterTypesByEffect(types1, "==", 0)), "#attackDisplay", "0X")
+  if (res){
+    $("#attackDisplay2").css("display","block")
+    getAllEffects(filterTypes(searchType2, 'ATTACKING'), "#attackDisplay2")
+  }
+  else {
+    $("#attackDisplay2").css("display","none")
+  }
+
+    function getAllEffects(types, id) {
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 4)), id, "4X")
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 2)), id, "2X")
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 1)), id, "1X")
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0.5)), id, "1_2X")
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0.25)), id, "1_4X")
+      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0)), id, "0X")
+    }
 
 }
 
@@ -242,18 +246,31 @@ var colorScale
 
 // attach change functions to sensors
 function setUpUI() {
+    // bind selectors to getAllstats and get input
     $("#selector1").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][0] = ui.item.value
-      getAllStats(selectorVariables[0][0], selectorVariables[0][1])
-    }
+      getAllStats(selectorVariables[0][0], selectorVariables[0][1]);
+      $('#selector2 option').prop("disabled", false)
+      $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
+      $("#selector2").selectmenu("refresh")
+    }, width: 150
   });
     $("#selector2").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][1] = ui.item.value
-      getAllStats(selectorVariables[0][0], selectorVariables[0][1])
-    }
+      getAllStats(selectorVariables[0][0], selectorVariables[0][1]);
+      $('#selector1 option').prop("disabled", false)
+      $('#selector1 option[value="' + selectorVariables[0][1] +'"]').prop("disabled","true")
+      $("#selector1").selectmenu("refresh")
+    }, width: 150
   });
+  // set up selector variable before jquery,
+  // and run getAllStats once
+    selectorVariables[0][0] = $("#selector1").val()
+    getAllStats($("#selector1").val(), "NONE")
+    $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
+    $("#selector2").selectmenu("refresh")
 }
 
 function displayTypes(types, id, title) {

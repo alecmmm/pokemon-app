@@ -18,10 +18,8 @@
 <body>
 	<img id="pokeball" src="./images/pokeball.png" alt="pokeball">
 	<div class="select-container">
-		<a name="pokemon_display"></a>
 		<label for="selector1">Select Type 1</label>
 	  <select name="types" id="selector1">
-			<option value="NONE">==NONE==</option>
 	    <option value="NORMAL">NORMAL</option>
 	    <option value="FIGHTING">FIGHTING</option>
 	    <option value="POISON">POISON</option>
@@ -43,7 +41,7 @@
 
 		<label for="selector2">Select Type 2</label>
 			<select name="types" id="selector2">
-			<option value="NONE">==NONE==</option>
+			<option value="NONE"></option>
 			<option value="NORMAL">NORMAL</option>
 			<option value="FIGHTING">FIGHTING</option>
 			<option value="POISON">POISON</option>
@@ -66,7 +64,34 @@
 
 		<div id="typeDisplays">
 			<div id="defenseDisplay">
-				<h1 style="color: white">Defense Effect</h1>
+				<h1 style="color: white">Combined Defense Effect</h1>
+				<div class="0X typeBoxContainer">
+					<h1>0X</h1>
+					<p></p>
+				</div>
+				<div class="1_4X typeBoxContainer">
+					<h1>1/4X</h1>
+					<p></p>
+				</div>
+				<div class="1_2X typeBoxContainer">
+					<h1>1/2X</h1>
+					<p></p>
+				</div>
+				<div class="1X typeBoxContainer">
+					<h1>1X</h1>
+					<p></p>
+				</div>
+				<div class="2X typeBoxContainer">
+					<h1>2X</h1>
+					<p></p>
+				</div>
+				<div class="4X typeBoxContainer">
+					<h1>4X</h1>
+					<p></p>
+				</div>
+			</div>
+			<div id="attackDisplay1">
+				<h1 style="color: white">Attack Effect Type 1</h1>
 				<div class="4X typeBoxContainer">
 					<h1>4X</h1>
 					<p></p>
@@ -92,8 +117,8 @@
 					<p></p>
 				</div>
 			</div>
-			<div id="attackDisplay">
-				<h1 style="color: white">Attack Effect</h1>
+			<div id="attackDisplay2">
+				<h1 style="color: white">Attack Effect Type 2</h1>
 				<div class="4X typeBoxContainer">
 					<h1>4X</h1>
 					<p></p>
@@ -121,6 +146,6 @@
 			</div>
 		</div>
 </body>
-  <script src="./formatting.js"></script>
   <script src="./pokemon-app.js"></script>
+	<script src="./formatting.js"></script>
 </html>

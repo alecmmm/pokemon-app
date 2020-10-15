@@ -1,5 +1,5 @@
-$( function() {
-  $( "#selector1" ).selectmenu();
-  $( "#selector2" ).selectmenu();
-}
-);
+// $( function() {
+//   $( "#selector1" ).selectmenu("option","width", 100);
+//   $( "#selector2" ).selectmenu();
+// }
+// );
