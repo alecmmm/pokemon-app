@@ -152,6 +152,7 @@ function stringifyTypes(types) {
   return res;
 }
 
+
 /*
 * filter types by effect level (e.g. > 1x or == 0x)
 */
@@ -159,13 +160,17 @@ function filterTypesByEffect(types, operator, num) {
   if (types == null) {
     return []
   }
-  res = cloneArray(types)
-  for (var i = 0; i < res.length; i++) {
-    if (!eval(res[i][getFirstKey(res[i])] + " " + operator + " " + num)) {
-      delete res[i]
+  var res = {}
+  var clone = cloneArray(types)
+
+  for (var i = 0; i < clone.length; i++) {
+    if (!eval(clone[i][getFirstKey(clone[i])] + " " + operator + " " + num)) {
+      delete clone[i]
     }
   }
-return res.filter(type => Object.keys(type).length !== 0)
+  res.data = clone.filter(type => Object.keys(type).length !== 0)
+  res.class = num.toString().replace('.',"\\.")
+  return res
 }
 
 /*
@@ -174,18 +179,20 @@ return res.filter(type => Object.keys(type).length !== 0)
 // TODO: monster of a function
 function getAllStats(searchType1, searchType2) {
 
-  var res = multiplyTypes(filterTypes(searchType1, 'DEFENDING'),
+  var defenseTypes = multiplyTypes(filterTypes(searchType1, 'DEFENDING'),
     filterTypes(searchType2, 'DEFENDING'))
 
-  // defense getAllStats
-  getAllEffects(res, "#defenseDisplay")
+  // defense getAllEffects
+  getAllEffects(defenseTypes, "#defenseDisplay")
 
   // attack stats 1
-  getAllEffects(filterTypes(searchType1, 'ATTACKING'), "#attackDisplay1")
+  var attackTypes1 = filterTypes(searchType1, 'ATTACKING')
+  getAllEffects(attackTypes1, "#attackDisplay1")
 
-  res = filterTypes(searchType2, 'ATTACKING')
+// attack stats 2
+  var attackTypes2 = filterTypes(searchType2, 'ATTACKING')
 
-  if (res){
+  if (attackTypes2){
     $("#attackDisplay2").css("display","block")
     getAllEffects(filterTypes(searchType2, 'ATTACKING'), "#attackDisplay2")
   }
@@ -193,15 +200,75 @@ function getAllStats(searchType1, searchType2) {
     $("#attackDisplay2").css("display","none")
   }
 
-    function getAllEffects(types, id) {
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 4)), id, "4X")
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 2)), id, "2X")
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 1)), id, "1X")
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0.5)), id, "1_2X")
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0.25)), id, "1_4X")
-      displayTypesX(stringifyTypes(filterTypesByEffect(types, "==", 0)), id, "0X")
+  var attackTypesMax =  getXEffect(attackTypes1, attackTypes2, Math.max)
+
+  var attackTypesMin =  getXEffect(attackTypes1, attackTypes2, Math.min)
+
+
+  console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
+
+// debate on what's more effective: should dual attacks both get full values?
+// on one hand, if you already have an effective STAB attack, having more isn't
+// that useful. Especially if you're up against a dual type, it's better to have
+// different types of attacks. Also, it gives attack equal weighting with defense.
+// However, if we're assuming we're up against a single type, maybe this
+// shouldn't be taken into consideration.
+  function getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin) {
+    var compTypes = Object.keys(typeCoordinates)
+    compTypes = compTypes.map((compType) => {
+      var score = 0
+      score -= defenseCalc(getValueByKey(defenseTypes, compType))
+      score += attackCalc(getValueByKey(attackTypesMax, compType))
+      if (attackTypes2) {
+        // divide min type by two to weight less
+      score += attackCalc(getValueByKey(attackTypesMin, compType)) / 2
+      }
+
+      return {type: compType, score: score}
+    })
+
+    compTypes = compTypes.sort(function(a, b) {
+      return b.score - a.score;
+    });
+    return compTypes
+  }
+
+// calculation to get the attack score
+  function attackCalc(num) {
+    return num
+  }
+
+  // calculation to get the defense score
+  function defenseCalc(num) {
+    return num
+  }
+
+// applies function x to get x of the two effects
+// TODO: combine with multiply function
+// e.g. if using Max.max, will get the max of the two effects
+  function getXEffect(types1, types2, xFunction) {
+    if (!types2) {
+      return types1
     }
 
+    for (var i = 0; i < types1.length; i++) {
+      types1[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
+    }
+    return types1
+  }
+
+
+    function getAllEffects(types, id) {
+
+      var res = [0, .25, .5, 1, 2, 4]
+      res = res.map((num) => {
+        return filterTypesByEffect(types, "==", num)
+      });
+
+      res.forEach((filteredType) => {
+        displayTypesX(stringifyTypes(filteredType.data), id, filteredType.class)
+      });
+    }
 }
 
 /*
@@ -220,6 +287,21 @@ function getFirstKey(object) {
 */
 function getFirstValue(object) {
   return object[getFirstKey(object)]
+}
+
+/*
+* Returns value of matching key in
+* the array of objects
+*/
+function getValueByKey(list, key) {
+  var res
+  list.forEach((item) => {
+    if (getFirstKey(item) == key) {
+      res = getFirstValue(item)
+      return false
+    }
+  });
+  return res
 }
 
 /*
@@ -272,18 +354,6 @@ function setUpUI() {
     $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
     $("#selector2").selectmenu("refresh")
 }
-
-function displayTypes(types, id, title) {
-  // if null, erase
-  if (types === undefined || types.length == 0) {
-    $(id + " ." + title + " h1").text("")
-    $(id + " ." + title + " p").text("")
-  }
-  else {
-    $(id + " ." + title + " h1").text(title.replace("_","/"))
-    $(id + " ." + title + " p").text(types)
-  }
-  }
 
 /*
 * Display types in specific id element and add header text
