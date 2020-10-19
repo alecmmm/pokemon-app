@@ -187,14 +187,17 @@ function getAllStats(searchType1, searchType2) {
 
   // attack stats 1
   var attackTypes1 = filterTypes(searchType1, 'ATTACKING')
-  getAllEffects(attackTypes1, "#attackDisplay1")
+  getAllEffects(attackTypes1, "#attackDisplay1", 'DESCEND')
+  // console.log(getValueByKey(attackTypes1,'FIRE'));
 
 // attack stats 2
   var attackTypes2 = filterTypes(searchType2, 'ATTACKING')
 
+
   if (attackTypes2){
     $("#attackDisplay2").css("display","block")
-    getAllEffects(filterTypes(searchType2, 'ATTACKING'), "#attackDisplay2")
+    getAllEffects(filterTypes(searchType2, 'ATTACKING'), "#attackDisplay2", 'DESCEND')
+    console.log(getValueByKey(attackTypes2,'FIRE'));
   }
   else {
     $("#attackDisplay2").css("display","none")
@@ -205,7 +208,7 @@ function getAllStats(searchType1, searchType2) {
   var attackTypesMin =  getXEffect(attackTypes1, attackTypes2, Math.min)
 
 
-  console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
+  // console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
 
 // debate on what's more effective: should dual attacks both get full values?
 // on one hand, if you already have an effective STAB attack, having more isn't
@@ -247,23 +250,50 @@ function getAllStats(searchType1, searchType2) {
 // TODO: combine with multiply function
 // e.g. if using Max.max, will get the max of the two effects
   function getXEffect(types1, types2, xFunction) {
+    var res = []
     if (!types2) {
       return types1
     }
 
     for (var i = 0; i < types1.length; i++) {
-      types1[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
+      res[i] = {}
+      res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
+      // res[i] = {getFirstKey(types1[i]): xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))}
+      // res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
     }
-    return types1
+    return res
   }
 
 
-    function getAllEffects(types, id) {
+    function getAllEffects(types, id, order='ASCEND') {
 
-      var res = [0, .25, .5, 1, 2, 4]
-      res = res.map((num) => {
+      var effectNums = [0, .25, .5, 1, 2, 4]
+
+      if(order == 'DESCEND'){
+        effectNums = effectNums.reverse()
+      }
+
+      res = effectNums.map((num) => {
         return filterTypesByEffect(types, "==", num)
       });
+
+      var display = $(id)
+
+      display.children(".typeBoxContainer").remove()
+
+      res.forEach((item, i) => {
+        display.append('<div class="' + effectNums[i] + ' typeBoxContainer"></div>')
+      });
+
+
+      $(id).find(".typeBoxContainer")
+      .empty()
+      .append("<h1></h1>")
+      .append("<p></p>")
+      .children("h1")
+      .html((i, title) => {
+        return effectNums[i]
+      })
 
       res.forEach((filteredType) => {
         displayTypesX(stringifyTypes(filteredType.data), id, filteredType.class)
@@ -355,10 +385,27 @@ function setUpUI() {
     $("#selector2").selectmenu("refresh")
 }
 
+function displayTypesX(types, id, title) {
+  // blank slate
+  $(id + " ." + title + " p").html("")
+  // if null, erase
+  if (types === undefined || types.length == 0) {
+    $(id + " ." + title).css("display","none")
+  }
+  else {
+    $(id + " ." + title).css("display","flex")
+    types.forEach((type) => {
+      $(id + " ." + title + " p").append('<div class=typeBox style="background:'
+      + colorScale(type) + ';">' + type + ' </div>')
+    });
+
+  }
+  }
+
 /*
 * Display types in specific id element and add header text
 */
-function displayTypesX(types, id, title) {
+function displayTypes(types, id, title) {
   // blank slate
   $(id + " ." + title + " p").html("")
   // if null, erase
