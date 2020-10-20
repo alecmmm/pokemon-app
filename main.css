@@ -1,6 +1,6 @@
 body{
 
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Montserrat', sans-serif;
   background-color: #e43611;
 }
 label {
@@ -9,11 +9,46 @@ label {
   font-size: 20px;
 }
 
-#pokeball{
-  width: 100px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
+h1{
+  font-size: 25px;
+}
+
+.header{
+  text-align: center;
+}
+
+.ui-selectmenu-button{
+  background-color: blue;
+  border: none;
+}
+
+h2{
+  font-size: 50px;
+  display: inline;
+  color: white;
+}
+
+.row{
+  display: flex;
+}
+
+.column{
+  flex: 50%;
+  padding: 5px;
+}
+
+#pokeball1{
+  width: 5%;
+  display: inline;
+  float: left;
+  margin-left: 100px;
+}
+
+#pokeball2{
+  width: 5%;
+  float: right;
+  display: inline;
+  margin-right: 100px;
 }
 
 
@@ -37,10 +72,12 @@ label {
   text-align: center;
 }
 
+
+
 .typeBoxContainer{
   background-color: white;
   margin: 10px;
-  display: none;
+  display: flex;
   max-width: 400px;
   border-radius: 10px;
   padding: 5px;
@@ -51,6 +88,8 @@ label {
   flex-direction: row;
   flex-wrap: wrap;
 }
+
+
 
 .typeBox{
   color: white;

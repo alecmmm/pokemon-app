@@ -7,8 +7,8 @@
 		<script src="https://www.gstatic.com/charts/loader.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
   	<link rel="stylesheet" type="text/css" href="./main.css">
-		<link href="https://fonts.googleapis.com/css2?family=Open+Sans&family=Roboto&display=swap" rel="stylesheet">
 		<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 		<script src="https://d3js.org/d3.v5.min.js"></script>
@@ -16,8 +16,13 @@
   </head>
 
 <body>
-	<img id="pokeball" src="./images/pokeball.png" alt="pokeball">
-	<button type="button" name="button" id="button"></button>
+	<div class="header">
+		<img id="pokeball1" src="./images/pokeball.png" alt="pokeball">
+		<h2>Pokemon Type Calculator</h2>
+		<img id="pokeball2" src="./images/pokeball.png" alt="pokeball">
+	</div>
+
+	<!-- <button type="button" name="button" id="button"></button> -->
 	<div class="select-container">
 		<label for="selector1">Select Type 1</label>
 	  <select name="types" id="selector1">
@@ -65,8 +70,14 @@
 
 
 		<div id="typeDisplays">
+			<div id="matchup">
+				<h1 style="color: white">Most Effective Matchup</h1>
+				<div class="0 typeBoxContainer">
+					<p></p>
+				</div>
+			</div>
 			<div id="defenseDisplay">
-				<h1 style="color: white">Combined Defense Effect</h1>
+				<h1 style="color: white">Damage Taken</h1>
 			</div>
 			<div id="attackDisplay1">
 				<h1 style="color: white">Attack Effect Type 1</h1>

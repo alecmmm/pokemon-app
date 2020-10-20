@@ -207,8 +207,16 @@ function getAllStats(searchType1, searchType2) {
 
   var attackTypesMin =  getXEffect(attackTypes1, attackTypes2, Math.min)
 
+  displayMostEffectiveTypes(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin))
 
-  // console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
+  $("#typeDisplays").find(".typeBox").each(
+    function () {
+      bounceHover(this)
+    }
+  )
+
+  console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
+
 
 // debate on what's more effective: should dual attacks both get full values?
 // on one hand, if you already have an effective STAB attack, having more isn't
@@ -258,17 +266,31 @@ function getAllStats(searchType1, searchType2) {
     for (var i = 0; i < types1.length; i++) {
       res[i] = {}
       res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
-      // res[i] = {getFirstKey(types1[i]): xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))}
-      // res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
     }
+
     return res
   }
 
+  function displayMostEffectiveTypes(typeList) {
 
+    var container = $("#matchup > .0 > p")
+
+    $("#matchup > .0").css("max-width", "250px")
+
+    // j
+    container.find(".typeBox").remove()
+    typeList.forEach((item, i) => {
+      container.append('<div class="typeBox" style="background:'
+      + colorScale(item.type) + ';">' + item.type + ': ' + item.score + '</div>')
+    });
+
+  }
+
+
+    // gets and displays all effects
     function getAllEffects(types, id, order='ASCEND') {
 
       var effectNums = [0, .25, .5, 1, 2, 4]
-
       if(order == 'DESCEND'){
         effectNums = effectNums.reverse()
       }
@@ -278,15 +300,14 @@ function getAllStats(searchType1, searchType2) {
       });
 
       var display = $(id)
-
       display.children(".typeBoxContainer").remove()
-
       res.forEach((item, i) => {
-        display.append('<div class="' + effectNums[i] + ' typeBoxContainer"></div>')
+        if (item.data) {
+          display.append('<div class="' + effectNums[i] + ' typeBoxContainer"></div>')
+        }
       });
 
-
-      $(id).find(".typeBoxContainer")
+      $(id).children(".typeBoxContainer")
       .empty()
       .append("<h1></h1>")
       .append("<p></p>")
@@ -385,6 +406,28 @@ function setUpUI() {
     $("#selector2").selectmenu("refresh")
 }
 
+function coloringButtons() {
+  $(".select-container")
+}
+
+// makes element bounce on hover
+function bounceHover(element) {
+  $(element).hover(
+    () => {
+      $(element).animate({
+        "width": "+=5px",
+        "height": "+=2px",
+        "font-size": "+=1px"
+      }, "fast"
+    )}, () => {
+      $(element).animate({
+      "width": "-=5px",
+      "height": "-=2px",
+      "font-size": "-=1px"
+    }, "fast")
+    })
+}
+
 function displayTypesX(types, id, title) {
   // blank slate
   $(id + " ." + title + " p").html("")
@@ -406,19 +449,20 @@ function displayTypesX(types, id, title) {
 * Display types in specific id element and add header text
 */
 function displayTypes(types, id, title) {
-  // blank slate
-  $(id + " ." + title + " p").html("")
-  // if null, erase
-  if (types === undefined || types.length == 0) {
-    $(id + " ." + title).css("display","none")
-  }
-  else {
-    $(id + " ." + title).css("display","flex")
-    types.forEach((type) => {
-      $(id + " ." + title + " p").append('<div class=typeBox style="background:'
-      + colorScale(type) + ';">' + type + ' </div>')
-    });
+  $(id + " ." + title).css("display","flex")
+  types.forEach((type) => {
+    $(id + " ." + title + " p").append('<div class=typeBox style="background:'
+    + colorScale(type) + ';">' + type + ' </div>')
+  });
 
   }
-  }
 }
+
+
+// TODO: make top ones bigger
+// put footnotes on where info is derived from
+// change numbers to "1x, 2x, etc."
+// Change "Combined Defense Effect" to "Damage Taken"
+// make dropdown colorful
+// shouldn't have the "select titles". It should be intuitive
+// should have a titled betweento pokeballs
