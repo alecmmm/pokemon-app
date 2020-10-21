@@ -23,13 +23,19 @@ var selectorVariables = [[],[]];
 
   setUpUI();
 
-  // for (var variable1 in typeCoordinates) {
-  //   for (var variable2 in typeCoordinates) {
-  //     if(variable1 != variable2){
-  //     console.log(getMostEffectiveType())
-  //     ;}
-  //   }
-  // }
+// var str = ""
+//   for (var variable1 in typeCoordinates) {
+//     for (var variable2 in typeCoordinates) {
+//       if(variable1 != variable2){
+//       getAllStats(variable1, variable2)[3].forEach((item) => {
+//         str = str + variable1 + "-" + variable2 + ", " +
+//           item.type + ", " + item.score + ", " + "\n"
+//       });
+//
+//       ;}
+//     }
+//   }
+//   console.log(str);
 
 
 
@@ -202,10 +208,10 @@ function getAllStats(searchType1, searchType2) {
   // attack stats 1
   var attackTypes1 = filterTypes(searchType1, 'ATTACKING')
 
-// attack stats 2
+  // attack stats 2
   var attackTypes2 = filterTypes(searchType2, 'ATTACKING')
 
-// most effective types
+  // most effective types
   var mostEffectiveTypes = getMostEffectiveType(defenseTypes,
      applyXtoTypes(attackTypes1, attackTypes2, Math.max),
     applyXtoTypes(attackTypes1, attackTypes2, Math.min))
@@ -456,7 +462,7 @@ function setUpUI() {
 // doesn't work because classes not always visible
 function coloringButtons() {
   // console.log($("body").find('[role="option"]'));
-  console.log($("body").find('.ui-menu-item'));
+  // console.log($("body").find('.ui-menu-item'));
   // console.log($("body").find(".typeBox"));
 }
 

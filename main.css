@@ -98,3 +98,26 @@ h2{
   width: 100px;
   height: 15px;
 }
+
+/* methodology page */
+
+h2{
+  text-align: center;
+}
+
+.paragraph{
+  margin: 50px;
+  font-size: 20px;
+}
+
+.equation{
+  font-size: 50px;
+  font-style: italic;
+  padding: 15px;
+  border-radius: 3px;
+  display: inline-block;
+  background-color: #EBECF0;
+  font-weight: bold;
+}
+
+/* jjjjj */
