@@ -1,5 +1,4 @@
 body{
-
   font-family: 'Montserrat', sans-serif;
   background-color: #e43611;
 }
@@ -11,15 +10,20 @@ label {
 
 h1{
   font-size: 25px;
+  padding-right: 10px;
+  margin: 0px;
 }
 
 .header{
   text-align: center;
 }
 
-.ui-selectmenu-button{
-  background-color: blue;
-  border: none;
+p{
+  margin: 0px;
+}
+
+#ui-id-21{
+  background-color: green;
 }
 
 h2{
@@ -28,14 +32,6 @@ h2{
   color: white;
 }
 
-.row{
-  display: flex;
-}
-
-.column{
-  flex: 50%;
-  padding: 5px;
-}
 
 #pokeball1{
   width: 5%;
@@ -53,8 +49,7 @@ h2{
 
 
 .select-container {
-  margin: 50px;
-  /* display: flex; */
+  margin: 45px;
 }
 
 #attackDisplay2{
@@ -77,10 +72,11 @@ h2{
 .typeBoxContainer{
   background-color: white;
   margin: 10px;
+  padding: 0px;
   display: flex;
-  max-width: 400px;
-  border-radius: 10px;
-  padding: 5px;
+  flex-direction: column;
+  max-width: 435px;
+  border-radius: 5px;
 }
 
 .typeBoxContainer > p{
@@ -94,11 +90,11 @@ h2{
 .typeBox{
   color: white;
   border-radius: 10px;
-  font-size: 10px;
+  font-size: 15px;
   text-align: center;
-  /* font-weight: bold; */
+  font-weight: bold;
   margin: 10px;
   padding: 5px;
-  width: 75px;
-  height: 10px;
+  width: 100px;
+  height: 15px;
 }

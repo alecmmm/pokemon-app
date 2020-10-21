@@ -22,7 +22,14 @@ var selectorVariables = [[],[]];
 
 
   setUpUI();
-  // run stats once at beginning4
+
+  // for (var variable1 in typeCoordinates) {
+  //   for (var variable2 in typeCoordinates) {
+  //     if(variable1 != variable2){
+  //     console.log(getMostEffectiveType())
+  //     ;}
+  //   }
+  // }
 
 
 
@@ -90,6 +97,26 @@ function formatFraction(fraction) {
   }
 }
 
+// format decimals into fractions
+function formatDecimals(decimal) {
+  switch (decimal) {
+    case 1:
+      return '1×'
+    case 2:
+      return '2×'
+    case 4:
+      return '4×'
+    case 0.5:
+      return '½×'
+    case 0.25:
+      return '¼×'
+    case 0:
+      return '0×'
+    default:
+      return decimal
+  }
+}
+
 function getTypeCoordinates() {
   var coordinates = {}
   for (var i = 1; i < dataTable.length; i++) {
@@ -127,20 +154,6 @@ function filterTypes(searchType, searchCond) {
   return res
 }
 
-// multiply defense types to get combined effects
-function multiplyTypes(defenseTypes1, defenseTypes2) {
-  if(!defenseTypes2){
-    return defenseTypes1
-  }
-
-  var res = cloneArray(defenseTypes1)
-  for (var i = 0; i < res.length; i++) {
-    // TODO: may need to sort to garuntee same order before we multiply
-    res[i][getFirstKey(res[i])] = getFirstValue(defenseTypes1[i]) * getFirstValue(defenseTypes2[i])
-  }
-  return res
-}
-
 /*
 * Convert list of types to stiring
 */
@@ -174,48 +187,34 @@ function filterTypesByEffect(types, operator, num) {
 }
 
 /*
-* Gets all the stats related to two type searches
+* Gets all the stats related to two type searches, including:
+* - defense stats
+* - attack stats (type 1 and 2)
+* - most effective types
 */
-// TODO: monster of a function
 function getAllStats(searchType1, searchType2) {
-
-  var defenseTypes = multiplyTypes(filterTypes(searchType1, 'DEFENDING'),
-    filterTypes(searchType2, 'DEFENDING'))
-
-  // defense getAllEffects
-  getAllEffects(defenseTypes, "#defenseDisplay")
+  // calculate defense scores by multiplying two type defenses
+  var defenseTypes = applyXtoTypes(filterTypes(searchType1, 'DEFENDING'),
+    filterTypes(searchType2, 'DEFENDING'),
+    function (type1, type2) {return type1 * type2}
+  )
 
   // attack stats 1
   var attackTypes1 = filterTypes(searchType1, 'ATTACKING')
-  getAllEffects(attackTypes1, "#attackDisplay1", 'DESCEND')
-  // console.log(getValueByKey(attackTypes1,'FIRE'));
 
 // attack stats 2
   var attackTypes2 = filterTypes(searchType2, 'ATTACKING')
 
+// most effective types
+  var mostEffectiveTypes = getMostEffectiveType(defenseTypes,
+     applyXtoTypes(attackTypes1, attackTypes2, Math.max),
+    applyXtoTypes(attackTypes1, attackTypes2, Math.min))
 
-  if (attackTypes2){
-    $("#attackDisplay2").css("display","block")
-    getAllEffects(filterTypes(searchType2, 'ATTACKING'), "#attackDisplay2", 'DESCEND')
-    console.log(getValueByKey(attackTypes2,'FIRE'));
-  }
-  else {
-    $("#attackDisplay2").css("display","none")
-  }
+  return [defenseTypes, attackTypes1, attackTypes2, mostEffectiveTypes]
+}
 
-  var attackTypesMax =  getXEffect(attackTypes1, attackTypes2, Math.max)
 
-  var attackTypesMin =  getXEffect(attackTypes1, attackTypes2, Math.min)
 
-  displayMostEffectiveTypes(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin))
-
-  $("#typeDisplays").find(".typeBox").each(
-    function () {
-      bounceHover(this)
-    }
-  )
-
-  console.log(getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin));
 
 
 // debate on what's more effective: should dual attacks both get full values?
@@ -224,102 +223,57 @@ function getAllStats(searchType1, searchType2) {
 // different types of attacks. Also, it gives attack equal weighting with defense.
 // However, if we're assuming we're up against a single type, maybe this
 // shouldn't be taken into consideration.
-  function getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin) {
-    var compTypes = Object.keys(typeCoordinates)
-    compTypes = compTypes.map((compType) => {
-      var score = 0
-      score -= defenseCalc(getValueByKey(defenseTypes, compType))
-      score += attackCalc(getValueByKey(attackTypesMax, compType))
-      if (attackTypes2) {
-        // divide min type by two to weight less
-      score += attackCalc(getValueByKey(attackTypesMin, compType)) / 2
-      }
+function getMostEffectiveType(defenseTypes, attackTypesMax, attackTypesMin) {
+  var compTypes = Object.keys(typeCoordinates)
+  compTypes = compTypes.map((compType) => {
+    var score = 0
+    score -= defenseCalc(getValueByKey(defenseTypes, compType))
+    score += attackCalc(getValueByKey(attackTypesMax, compType))
+      // divide min type by two to weight less
+    // score += attackCalc(getValueByKey(attackTypesMin, compType)) / 2
 
-      return {type: compType, score: score}
-    })
+    // normalize score out of 0 to 1
+    score = normalizeScore(score)
 
-    compTypes = compTypes.sort(function(a, b) {
-      return b.score - a.score;
-    });
-    return compTypes
-  }
+    return {type: compType, score: score}
+  })
+
+  compTypes = compTypes.sort(function(a, b) {
+    return b.score - a.score;
+  });
+  return compTypes
+}
 
 // calculation to get the attack score
-  function attackCalc(num) {
-    return num
-  }
+function attackCalc(num) {
+  return num
+}
 
-  // calculation to get the defense score
-  function defenseCalc(num) {
-    return num
-  }
+// normalize and format score
+function normalizeScore(score) {
+  return score
+}
+
+// calculation to get the defense score
+function defenseCalc(num) {
+  return num
+}
 
 // applies function x to get x of the two effects
 // TODO: combine with multiply function
 // e.g. if using Max.max, will get the max of the two effects
-  function getXEffect(types1, types2, xFunction) {
-    var res = []
-    if (!types2) {
-      return types1
-    }
-
-    for (var i = 0; i < types1.length; i++) {
-      res[i] = {}
-      res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
-    }
-
-    return res
+function applyXtoTypes(types1, types2, xFunction) {
+  var res = []
+  if (!types2) {
+    return types1
   }
 
-  function displayMostEffectiveTypes(typeList) {
-
-    var container = $("#matchup > .0 > p")
-
-    $("#matchup > .0").css("max-width", "250px")
-
-    // j
-    container.find(".typeBox").remove()
-    typeList.forEach((item, i) => {
-      container.append('<div class="typeBox" style="background:'
-      + colorScale(item.type) + ';">' + item.type + ': ' + item.score + '</div>')
-    });
-
+  for (var i = 0; i < types1.length; i++) {
+    res[i] = {}
+    res[i][getFirstKey(types1[i])] = xFunction(getFirstValue(types1[i]), getFirstValue(types2[i]))
   }
 
-
-    // gets and displays all effects
-    function getAllEffects(types, id, order='ASCEND') {
-
-      var effectNums = [0, .25, .5, 1, 2, 4]
-      if(order == 'DESCEND'){
-        effectNums = effectNums.reverse()
-      }
-
-      res = effectNums.map((num) => {
-        return filterTypesByEffect(types, "==", num)
-      });
-
-      var display = $(id)
-      display.children(".typeBoxContainer").remove()
-      res.forEach((item, i) => {
-        if (item.data) {
-          display.append('<div class="' + effectNums[i] + ' typeBoxContainer"></div>')
-        }
-      });
-
-      $(id).children(".typeBoxContainer")
-      .empty()
-      .append("<h1></h1>")
-      .append("<p></p>")
-      .children("h1")
-      .html((i, title) => {
-        return effectNums[i]
-      })
-
-      res.forEach((filteredType) => {
-        displayTypesX(stringifyTypes(filteredType.data), id, filteredType.class)
-      });
-    }
+  return res
 }
 
 /*
@@ -377,22 +331,113 @@ function cloneArray(array) {
 // Global variables
 var colorScale
 
+/*
+*  Displays all stats from getAllStats
+*  stats array is composed of the following ordered elements:
+*  - defense stats
+*  - attack 1 stats
+*  - attack 2 stats
+*  - attack 3 stats
+*/
+function displayAllStats(statsArray) {
+  // display defense
+  displayEffectsAtId(statsArray[0], "#defenseDisplay")
+
+  // display attack types 1
+  displayEffectsAtId(statsArray[1], "#attackDisplay1", 'DESCEND')
+
+  // display attack types 2 if available
+  if (statsArray[2]){
+    $("#attackDisplay2").css("display","block")
+    displayEffectsAtId(statsArray[2], "#attackDisplay2", 'DESCEND')
+  }
+  // if not, make make id invisible
+  else {
+    $("#attackDisplay2").css("display","none")
+  }
+
+  displayMostEffectiveTypes(statsArray[3])
+
+  // make type boxes interactive
+  $("#typeDisplays").find(".typeBox").each(
+    function () {
+      bounceHover(this)
+    }
+  )
+
+}
+
+
+/*
+*  Displays all effects at given id in given order
+*/
+// TODO: separate out the grouping function that's created
+// with filterTypesByEffect
+function displayEffectsAtId(types, id, order='ASCEND') {
+
+  var effectNums = [0, .25, .5, 1, 2, 4]
+  if(order == 'DESCEND'){
+    effectNums = effectNums.reverse()
+  }
+
+  res = effectNums.map((num) => {
+    return filterTypesByEffect(types, "==", num)
+  });
+
+  var display = $(id)
+  display.children(".typeBoxContainer").remove()
+  res.forEach((item, i) => {
+    if (item.data) {
+      display.append('<div class="' + effectNums[i] + ' typeBoxContainer"></div>')
+    }
+  });
+
+  $(id).children(".typeBoxContainer")
+  .empty()
+  .append("<h1></h1>")
+  .append("<p></p>")
+  .children("h1")
+  .html((i, title) => {
+    return formatDecimals(effectNums[i])
+  })
+
+  res.forEach((filteredType) => {
+    displayTypesX(stringifyTypes(filteredType.data), id, filteredType.class)
+  });
+}
+
+function displayMostEffectiveTypes(typeList) {
+
+  var container = $("#matchup > .0 > p")
+
+  $("#matchup > .0").css("max-width", "300px")
+
+  // j
+  container.find(".typeBox").remove()
+  typeList.forEach((item, i) => {
+    container.append('<div class="typeBox" style="background:'
+    + colorScale(item.type) + ';">' + item.type + ': ' + item.score + '</div>')
+  });
+
+}
+
 // attach change functions to sensors
 function setUpUI() {
     // bind selectors to getAllstats and get input
-    $("#selector1").selectmenu({
+    var sel1 = $("#selector1").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][0] = ui.item.value
-      getAllStats(selectorVariables[0][0], selectorVariables[0][1]);
+      displayAllStats(getAllStats(selectorVariables[0][0], selectorVariables[0][1]));
       $('#selector2 option').prop("disabled", false)
       $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
       $("#selector2").selectmenu("refresh")
-    }, width: 150
+    }, width: 150,
   });
+
     $("#selector2").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][1] = ui.item.value
-      getAllStats(selectorVariables[0][0], selectorVariables[0][1]);
+      displayAllStats(getAllStats(selectorVariables[0][0], selectorVariables[0][1]));
       $('#selector1 option').prop("disabled", false)
       $('#selector1 option[value="' + selectorVariables[0][1] +'"]').prop("disabled","true")
       $("#selector1").selectmenu("refresh")
@@ -401,13 +446,18 @@ function setUpUI() {
   // set up selector variable before jquery,
   // and run getAllStats once
     selectorVariables[0][0] = $("#selector1").val()
-    getAllStats($("#selector1").val(), "NONE")
+    displayAllStats(getAllStats($("#selector1").val(), "NONE"))
     $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
     $("#selector2").selectmenu("refresh")
+
+    coloringButtons()
 }
 
+// doesn't work because classes not always visible
 function coloringButtons() {
-  $(".select-container")
+  // console.log($("body").find('[role="option"]'));
+  console.log($("body").find('.ui-menu-item'));
+  // console.log($("body").find(".typeBox"));
 }
 
 // makes element bounce on hover
@@ -466,3 +516,4 @@ function displayTypes(types, id, title) {
 // make dropdown colorful
 // shouldn't have the "select titles". It should be intuitive
 // should have a titled betweento pokeballs
+// j
