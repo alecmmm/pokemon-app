@@ -1,6 +1,8 @@
 body{
   font-family: 'Montserrat', sans-serif;
-  background-color: #e43611;
+  background-color: #white;
+  margin: 0px;
+  padding: 0px;
 }
 label {
   color: white;
@@ -10,12 +12,16 @@ label {
 
 h1{
   font-size: 25px;
+  text-align: center;
+  color: white;
   padding-right: 10px;
-  margin: 0px;
 }
 
 .header{
   text-align: center;
+  background-color: #272727;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 p{
@@ -34,14 +40,14 @@ h2{
 
 
 #pokeball1{
-  width: 5%;
+  width: 65px;
   display: inline;
   float: left;
   margin-left: 100px;
 }
 
 #pokeball2{
-  width: 5%;
+  width: 65px;
   float: right;
   display: inline;
   margin-right: 100px;
@@ -72,6 +78,7 @@ h2{
 .typeBoxContainer{
   background-color: white;
   margin: 10px;
+  background-color: #747474;
   padding: 0px;
   display: flex;
   flex-direction: column;
@@ -90,6 +97,7 @@ h2{
 .typeBox{
   color: white;
   border-radius: 10px;
+  cursor: pointer;
   font-size: 15px;
   text-align: center;
   font-weight: bold;
@@ -99,11 +107,43 @@ h2{
   height: 15px;
 }
 
-/* methodology page */
-
-h2{
-  text-align: center;
+.detail{
+  display: inline-block;
+  border-radius: 3px;
+  margin: 5px;
+  padding: 5px;
+  background-color: #e2e2e2;
+  /* j */
 }
+
+.detail-number{
+  display: inline-block;
+  border-radius: 3px;
+  font-weight: bold;
+  padding: 5px;
+  background-color: white;
+}
+
+#detail{
+  font-size: 21px;
+}
+
+.basicContainer{
+  background-color: #747474;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 5px;
+  width: 435px;
+  border-radius: 5px;
+}
+
+.row{
+  /* margin: 10px; */
+}
+
+/* methodology page */
 
 .paragraph{
   margin: 50px;

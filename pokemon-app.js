@@ -4,6 +4,8 @@
 var dataTable
 var typeCoordinates
 var selector1
+var currentSelection = "NORMAL"
+// TODO: encapsulate in object
 var selectorVariables = [[],[]];
 
 // main async function, used to wait for completion of asynch tasks
@@ -88,6 +90,8 @@ function createTable(response){
 }
 
 // format fractions in chart to decimals
+// maybe just apply to table, so I don't have to use this
+// func so much
 function formatFraction(fraction) {
   switch (fraction) {
     case '1×':
@@ -123,6 +127,10 @@ function formatDecimals(decimal) {
   }
 }
 
+/*
+* BACKEND INTERACTIONS
+*/
+
 function getTypeCoordinates() {
   var coordinates = {}
   for (var i = 1; i < dataTable.length; i++) {
@@ -134,6 +142,9 @@ function getTypeCoordinates() {
 // gets the type effect corresponding to attacking
 //and defending types
 function getEffect(attacking, defending) {
+  if(attacking == null || defending == null || attacking == '' || defending == ''){
+    return 1
+  }
   return  dataTable[typeCoordinates[attacking]][typeCoordinates[defending]]
 }
 
@@ -216,11 +227,129 @@ function getAllStats(searchType1, searchType2) {
      applyXtoTypes(attackTypes1, attackTypes2, Math.max),
     applyXtoTypes(attackTypes1, attackTypes2, Math.min))
 
-  return [defenseTypes, attackTypes1, attackTypes2, mostEffectiveTypes]
+  // getAllDualEffects()
+  var mostEffectiveDualTypes = getMostEffectiveDualType(selectorVariables[0][0],
+    selectorVariables[0][1])
+
+  return [defenseTypes, attackTypes1, attackTypes2, mostEffectiveTypes,
+  mostEffectiveDualTypes]
+}
+
+function getMostEffectiveDualType(searchType1, searchType2) {
+  if(searchType2 == undefined){
+    searchType2 = null
+  }
+  var compTypes1 = Object.keys(typeCoordinates)
+  var compTypes2 = Object.keys(typeCoordinates)
+  compTypes1.push(null)
+  var res = []
+  compTypes1.forEach((type1) => {
+    // remove first item from array
+    compTypes2.splice(0,1)
+    compTypes2.forEach((type2) => {
+      if (type1 != type2) {
+        var defense = getDualDamage(searchType1, searchType2, type1, type2)
+        var attack = getDualDamage(type1, type2, searchType1, searchType2)
+        var score = attack - defense
+        res.push({type1: type1, type2: type2, score: score})
+      }
+    });
+  });
+
+  return res;
+
+
+// returns the dual defense between the search type (defending) and opposing
+// type (attacking) j
+  function getDualDamage(defendingT1, defendingT2, attackingT1, attackingT2) {
+    return Math.max(
+      formatFraction(getEffect(attackingT1, defendingT1)) *
+      formatFraction(getEffect(attackingT1, defendingT2)),
+      formatFraction(getEffect(attackingT2, defendingT1)) *
+      formatFraction(getEffect(attackingT2, defendingT2))
+    )
+  }
+
+}
+
+function filterDualTypes(dualTypes, sort='DESCENDING') {
+  var maxValue = Math.max.apply(Math, dualTypes.map(
+    function(b) { return b.score; }))
+
+  dualTypes = dualTypes.filter((type) => { return type.score == maxValue});
+
+  // dualTypes = dualTypes.filter((type) => { return (type.type1 == 'NORMAL' || type.type2 == 'NORMAL')});
+
+  console.log(dualTypes);
+
+  console.log(group(dualTypes));
+
+  // groups all combinations into a smaller set
+  function group(dualTypes) {
+    var array = (() => {
+      var res = []
+      dualTypes.forEach( e => {
+        res.push([e.type1, e.type2])
+      });
+      return res
+    })();
+
+    // use Bron Kerbosch algorithm to group and maximal cliques
+    var reduce = BronKerbosch(array)
+
+
+
+
+  }
+
+  function groupByVertex(array) {
+    array = array.filter((e) => {
+      return e.length == 2
+    })
+
+    var vertexes = new Set()
+
+    array.forEach(e => {
+      vertexes.add(e.type1)
+      vertexes.add(e.type2)
+    });
+
+    // vertexes.forEach(e => {
+    //
+    // });
+
+  }
+
+
 }
 
 
+function getAllDualEffects(searchType1, searchType2) {
+  var compTypes = Object.keys(typeCoordinates)
+  var compTypes1 = Object.keys(typeCoordinates)
+  compTypes1.push(null)
 
+
+for (var b = 0; b < compTypes.length; b++) {
+  for (var c = 0; c < compTypes.length; c++) {
+    for (var i = 0; i < compTypes.length; i++) {
+      for (var j = 0; j < compTypes.length; j++) {
+        if (compTypes[j] != compTypes[i] && compTypes[b] != compTypes[c]) {
+          var def = Math.max(formatFraction(getEffect(compTypes[j], compTypes[b])) *
+          formatFraction(getEffect(compTypes[j], compTypes[c])),
+          formatFraction(getEffect(compTypes[i], compTypes[b])) *
+          formatFraction(getEffect(compTypes[i], compTypes[c])))
+          var att = Math.max(formatFraction(getEffect(compTypes[b], compTypes[i])) *
+          formatFraction(getEffect(compTypes[b], compTypes[j])),
+          formatFraction(getEffect(compTypes[c], compTypes[j])) *
+          formatFraction(getEffect(compTypes[c], compTypes[i])))
+          console.log(compTypes[b] + "-" + compTypes[c], att - def, compTypes[j] + "-" + compTypes[i]);
+        }
+      }
+    }
+  }
+}
+}
 
 
 // debate on what's more effective: should dual attacks both get full values?
@@ -346,23 +475,25 @@ var colorScale
 *  - attack 3 stats
 */
 function displayAllStats(statsArray) {
-  // display defense
-  displayEffectsAtId(statsArray[0], "#defenseDisplay")
-
-  // display attack types 1
-  displayEffectsAtId(statsArray[1], "#attackDisplay1", 'DESCEND')
-
-  // display attack types 2 if available
-  if (statsArray[2]){
-    $("#attackDisplay2").css("display","block")
-    displayEffectsAtId(statsArray[2], "#attackDisplay2", 'DESCEND')
-  }
-  // if not, make make id invisible
-  else {
-    $("#attackDisplay2").css("display","none")
-  }
+  // // display defense
+  // displayEffectsAtId(statsArray[0], "#defenseDisplay")
+  //
+  // // display attack types 1
+  // displayEffectsAtId(statsArray[1], "#attackDisplay1", 'DESCEND')
+  //
+  // // display attack types 2 if available
+  // if (statsArray[2]){
+  //   $("#attackDisplay2").css("display","block")
+  //   displayEffectsAtId(statsArray[2], "#attackDisplay2", 'DESCEND')
+  // }
+  // // if not, make make id invisible
+  // else {
+  //   $("#attackDisplay2").css("display","none")
+  // }
 
   displayMostEffectiveTypes(statsArray[3])
+
+  filterDualTypes(statsArray[4])
 
   // make type boxes interactive
   $("#typeDisplays").find(".typeBox").each(
@@ -416,12 +547,12 @@ function displayMostEffectiveTypes(typeList) {
 
   var container = $("#matchup > .0 > p")
 
-  $("#matchup > .0").css("max-width", "300px")
+  $("#matchup > .0").css("max-width", "550px")
 
   // j
   container.find(".typeBox").remove()
   typeList.forEach((item, i) => {
-    container.append('<div class="typeBox" style="background:'
+    container.append('<div class="typeBox" data-type=' + item.type + ' style="background:'
     + colorScale(item.type) + ';">' + item.type + ': ' + item.score + '</div>')
   });
 
@@ -437,6 +568,7 @@ function setUpUI() {
       $('#selector2 option').prop("disabled", false)
       $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
       $("#selector2").selectmenu("refresh")
+      displayDetails(currentSelection)
     }, width: 150,
   });
 
@@ -447,6 +579,7 @@ function setUpUI() {
       $('#selector1 option').prop("disabled", false)
       $('#selector1 option[value="' + selectorVariables[0][1] +'"]').prop("disabled","true")
       $("#selector1").selectmenu("refresh")
+      displayDetails(currentSelection)
     }, width: 150
   });
   // set up selector variable before jquery,
@@ -455,8 +588,9 @@ function setUpUI() {
     displayAllStats(getAllStats($("#selector1").val(), "NONE"))
     $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
     $("#selector2").selectmenu("refresh")
+    displayDetails(currentSelection)
 
-    coloringButtons()
+    // coloringButtons()
 }
 
 // doesn't work because classes not always visible
@@ -467,6 +601,7 @@ function coloringButtons() {
 }
 
 // makes element bounce on hover
+// TODO: change name. does more than hover
 function bounceHover(element) {
   $(element).hover(
     () => {
@@ -474,7 +609,7 @@ function bounceHover(element) {
         "width": "+=5px",
         "height": "+=2px",
         "font-size": "+=1px"
-      }, "fast"
+      }, 100
     )}, () => {
       $(element).animate({
       "width": "-=5px",
@@ -482,6 +617,53 @@ function bounceHover(element) {
       "font-size": "-=1px"
     }, "fast")
     })
+  $(element).click(
+    () => {
+      currentSelection = $(element).data("type")
+      displayDetails($(element).data("type"))
+    }
+  )
+}
+
+function displayDetails(type) {
+// clear contents
+  $("#typeDetail").empty()
+  $("#attackDetail1").empty()
+  $("#attackDetail2").empty()
+  $("#defenseDetail").empty()
+
+// add new contents
+  $("#typeDetail").append(createTypeBox(type))
+
+  var div1 = '<div class="detail-number">'
+  var div2 = '</div>'
+
+  $("#attackDetail1").append(
+    "Type 1 attack: " + div1 + formatDecimals(getEffect(selectorVariables[0][0], type)) + div2
+  )
+
+// if there's a type 2
+  if(selectorVariables[0][1]){
+    $("#attackDetail2").append(
+      "Type 2 attack: " + div1 + formatDecimals(getEffect(selectorVariables[0][1], type)) + div2
+    )
+    $("#defenseDetail").append(
+      "Damage taken: " + div1 + formatDecimals(getEffect(type, selectorVariables[0][0]) *
+      getEffect(type, selectorVariables[0][1])) + div2
+    )
+  }
+  else{
+    $("#defenseDetail").append(
+      'Damage taken: ' + div1 + formatDecimals(getEffect(type, selectorVariables[0][0])) + div2
+    )
+  }
+
+
+}
+
+function createTypeBox(typeName) {
+  return '<div class="typeBox" style="background:'+ colorScale(typeName) +
+  '; width: 300px; height: 50px; font-size: 30px; text-align: center;">' + typeName + '</div>'
 }
 
 function displayTypesX(types, id, title) {

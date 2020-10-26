@@ -8,6 +8,7 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+		<script src="https://unpkg.com/@seregpie/bron-kerbosch"></script>
   	<link rel="stylesheet" type="text/css" href="./main.css">
 		<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
 		<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -24,7 +25,7 @@
 
 	<!-- <button type="button" name="button" id="button"></button> -->
 	<div class="select-container">
-		<label for="selector1">Select Type 1</label>
+		<label for="selector1">Type 1</label>
 	  <select name="types" id="selector1">
 	    <option value="NORMAL">NORMAL</option>
 	    <option value="FIGHTING">FIGHTING</option>
@@ -45,9 +46,9 @@
 	    <option value="FAIRY">FAIRY</option>
 	  </select>
 
-		<label for="selector2">Select Type 2</label>
+		<label for="selector2">Type 2</label>
 			<select name="types" id="selector2">
-			<option value="NONE"></option>
+			<option value=""></option>
 			<option value="NORMAL">NORMAL</option>
 			<option value="FIGHTING">FIGHTING</option>
 			<option value="POISON">POISON</option>
@@ -71,19 +72,37 @@
 
 		<div id="typeDisplays">
 			<div id="matchup">
-				<h1 style="color: white">Most Effective Matchup</h1>
 				<div class="0 typeBoxContainer">
+					<h1>Most Effective Against</h1>
 					<p></p>
 				</div>
 			</div>
+			<div id="detail">
+				<div class="basicContainer">
+					<h1>Details</h1>
+					<div class="row">
+						<div id="typeDetail"></div>
+					</div>
+					<div class="row">
+						<div id="attackDetail1" class="detail"></div>
+					</div>
+					<div class="row">
+						<div id="attackDetail2" class="detail"></div>
+					</div>
+					<div class="row">
+						<div id="defenseDetail" class="detail"></div>
+					</div>
+					</div>
+				</div>
+			</div>
 			<div id="defenseDisplay">
-				<h1 style="color: white">Damage Taken</h1>
+				<h1 style="color: white"></h1>
 			</div>
 			<div id="attackDisplay1">
-				<h1 style="color: white">Attack Effect Type 1</h1>
+				<h1 style="color: white"></h1>
 			</div>
 			<div id="attackDisplay2">
-				<h1 style="color: white">Attack Effect Type 2</h1>
+				<h1 style="color: white"></h1>
 			</div>
 		</div>
 </body>
