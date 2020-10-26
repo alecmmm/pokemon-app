@@ -89,6 +89,7 @@ h2{
 .typeBoxContainer > p{
   display: flex;
   flex-direction: row;
+  margin: auto;
   flex-wrap: wrap;
 }
 
@@ -137,6 +138,13 @@ h2{
   padding: 5px;
   width: 435px;
   border-radius: 5px;
+}
+
+.basicSubContainer{
+  border-radius: 3px;
+  margin: 5px;
+  padding: 5px;
+  background-color: #747474;
 }
 
 .row{

@@ -23,7 +23,6 @@
 		<img id="pokeball2" src="./images/pokeball.png" alt="pokeball">
 	</div>
 
-	<!-- <button type="button" name="button" id="button"></button> -->
 	<div class="select-container">
 		<label for="selector1">Type 1</label>
 	  <select name="types" id="selector1">
@@ -67,13 +66,15 @@
 			<option value="DARK">DARK</option>
 			<option value="FAIRY">FAIRY</option>
 		</select>
+		<label for="button"></label>
+		<button type="button" name="button" id="button" data-value="strongest">Sort By Strongest Matches</button>
 	</div>
 
 
 		<div id="typeDisplays">
 			<div id="matchup">
 				<div class="0 typeBoxContainer">
-					<h1>Most Effective Against</h1>
+					<h1>Single Type Score</h1>
 					<p></p>
 				</div>
 			</div>
@@ -95,6 +96,11 @@
 					</div>
 				</div>
 			</div>
+			<div id="cliques" class="typeBoxContainer">
+				<h1></h1>
+				<p></p>
+			</div>
+			<div id="cliques2" class="typeBoxContainer"></div>
 			<div id="defenseDisplay">
 				<h1 style="color: white"></h1>
 			</div>

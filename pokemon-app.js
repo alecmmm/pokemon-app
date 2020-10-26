@@ -272,85 +272,143 @@ function getMostEffectiveDualType(searchType1, searchType2) {
 
 }
 
-function filterDualTypes(dualTypes, sort='DESCENDING') {
-  var maxValue = Math.max.apply(Math, dualTypes.map(
-    function(b) { return b.score; }))
-
-  dualTypes = dualTypes.filter((type) => { return type.score == maxValue});
-
-  // dualTypes = dualTypes.filter((type) => { return (type.type1 == 'NORMAL' || type.type2 == 'NORMAL')});
-
+/*
+* Filters all dual types for either the most or least effective type and
+* groups them into more readable groups
+*/
+function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
   console.log(dualTypes);
 
-  console.log(group(dualTypes));
+  // groups all combinations into a smaller set
+    // var exampleTypes = (() => {
+    //   var res = []
+    //   dualTypes.forEach( e => {
+    //     res.push([e.type1, e.type2])
+    //   });
+    //   return res
+    // })()
+
+  var sortedTypes = separateByScore(dualTypes).map(
+    e => {
+      return {
+        score: e,
+        edges: dualTypes.filter(f => {
+          return f.score == e
+        })
+      }
+    }
+  )
+
+  sortedTypes.forEach(e => {
+    e.edges = e.edges.map(
+      f => {
+        return [f.type1, f.type2]
+      }
+    )
+  });
+
+
+  // console.log(sortedTypes);
+
+  sortedTypes.forEach(e => {
+    console.log(BronKerbosch(e.edges));
+  });
+
+
+  var sortValue = sort.apply(Math, dualTypes.map(
+    function(b) { return b.score; }))
+  dualTypes = dualTypes.filter((type) => { return type.score == sortValue});
 
   // groups all combinations into a smaller set
-  function group(dualTypes) {
-    var array = (() => {
+    var dualTypes = (() => {
       var res = []
       dualTypes.forEach( e => {
         res.push([e.type1, e.type2])
       });
       return res
-    })();
+    })()
 
     // use Bron Kerbosch algorithm to group and maximal cliques
-    var reduce = BronKerbosch(array)
+    var cliques = BronKerbosch(dualTypes)
+    // group all groups of size two
+    var cliques2 = groupByVertex(cliques
+    .filter(
+      e => {
+        return e.length == 2
+      }
+    ))
 
+    // get rid of overlap
+    cliques = cliques.filter(
+      e => {
+        return e.length != 2
+      }
+    )
 
+    return {cliques: cliques, cliques2: cliques2}
 
-
-  }
-
+  // further groups any bijective elements
   function groupByVertex(array) {
     array = array.filter((e) => {
       return e.length == 2
     })
-
     var vertexes = new Set()
 
     array.forEach(e => {
-      vertexes.add(e.type1)
-      vertexes.add(e.type2)
+      vertexes.add(e[0])
+      vertexes.add(e[1])
     });
+    vertexes = Array.from(vertexes)
 
-    // vertexes.forEach(e => {
-    //
-    // });
+    vertexes = vertexes.map(
+      (e) => {
+        return {
+          vertex: e,
+          count: [...array].filter(x => (x[0]==e || x[1] == e)).length,
+          connects: []
+        }})
+        .sort((e, f) => {
+          return f.count - e.count
+        })
+    var i = 0
+    while (i < vertexes.length) {
+      var j = 0
+      while(j < array.length){
+        if (vertexes[i].vertex == array[j][0]) {
+          vertexes[i].connects.push(array[j][1])
+          array.splice(j,1)
+        }
 
-  }
+        else if (vertexes[i].vertex == array[j][1]) {
+          vertexes[i].connects.push(array[j][0])
+          array.splice(j,1)
+        }
 
-
-}
-
-
-function getAllDualEffects(searchType1, searchType2) {
-  var compTypes = Object.keys(typeCoordinates)
-  var compTypes1 = Object.keys(typeCoordinates)
-  compTypes1.push(null)
-
-
-for (var b = 0; b < compTypes.length; b++) {
-  for (var c = 0; c < compTypes.length; c++) {
-    for (var i = 0; i < compTypes.length; i++) {
-      for (var j = 0; j < compTypes.length; j++) {
-        if (compTypes[j] != compTypes[i] && compTypes[b] != compTypes[c]) {
-          var def = Math.max(formatFraction(getEffect(compTypes[j], compTypes[b])) *
-          formatFraction(getEffect(compTypes[j], compTypes[c])),
-          formatFraction(getEffect(compTypes[i], compTypes[b])) *
-          formatFraction(getEffect(compTypes[i], compTypes[c])))
-          var att = Math.max(formatFraction(getEffect(compTypes[b], compTypes[i])) *
-          formatFraction(getEffect(compTypes[b], compTypes[j])),
-          formatFraction(getEffect(compTypes[c], compTypes[j])) *
-          formatFraction(getEffect(compTypes[c], compTypes[i])))
-          console.log(compTypes[b] + "-" + compTypes[c], att - def, compTypes[j] + "-" + compTypes[i]);
+        else{
+          j++
         }
       }
+      i++
     }
+
+    return vertexes.filter(e => {
+      return e.connects.length != 0
+    })
   }
 }
-}
 
+
+function separateByScore(arr) {
+   return Array.from(
+     new Set(
+       arr.map(
+         e => {
+           return e.score
+         }
+       )
+     )
+   )
+}
 
 // debate on what's more effective: should dual attacks both get full values?
 // on one hand, if you already have an effective STAB attack, having more isn't
@@ -493,10 +551,12 @@ function displayAllStats(statsArray) {
 
   displayMostEffectiveTypes(statsArray[3])
 
-  filterDualTypes(statsArray[4])
+  displayDualTypes(filterAndGroupDualTypes(statsArray[4]));
+
+
 
   // make type boxes interactive
-  $("#typeDisplays").find(".typeBox").each(
+  $("body").find(".typeBox").each(
     function () {
       bounceHover(this)
     }
@@ -569,8 +629,9 @@ function setUpUI() {
       $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
       $("#selector2").selectmenu("refresh")
       displayDetails(currentSelection)
-    }, width: 150,
-  });
+      },
+    width: 150,
+    });
 
     $("#selector2").selectmenu({
     change: function(event, ui) {
@@ -582,6 +643,14 @@ function setUpUI() {
       displayDetails(currentSelection)
     }, width: 150
   });
+
+  $( "#button" ).button({
+    click: function (event, ui) {
+      console.log(ui.item.value);
+    },
+    width: 300
+  })
+
   // set up selector variable before jquery,
   // and run getAllStats once
     selectorVariables[0][0] = $("#selector1").val()
@@ -606,6 +675,7 @@ function bounceHover(element) {
   $(element).hover(
     () => {
       $(element).animate({
+        "transform": "translate(-2.5px, -1px)",
         "width": "+=5px",
         "height": "+=2px",
         "font-size": "+=1px"
@@ -661,9 +731,78 @@ function displayDetails(type) {
 
 }
 
-function createTypeBox(typeName) {
-  return '<div class="typeBox" style="background:'+ colorScale(typeName) +
-  '; width: 300px; height: 50px; font-size: 30px; text-align: center;">' + typeName + '</div>'
+function displayDualTypes(dualTypesObj) {
+  //clique groups greater than 2
+  if (dualTypesObj.cliques.length != 0) {
+    var cliques = $("#cliques")
+    .css("display", "flex")
+    .css("max-width", "550px")
+
+    var p = cliques.find("p")
+      .empty()
+
+    cliques.find("h1").html("Most Effective Against Any Dual Combo Of")
+
+    dualTypesObj.cliques.forEach(e => {
+      e.forEach(f => {
+        p.append(createTypeBox(f, 100, 15, 15))
+      });
+
+    });
+  }
+  else {
+    $("#cliques").css("display", "none")
+  }
+  // clique groups of size 2
+  if (dualTypesObj.cliques2.length != 0) {
+    var cliques2 = $("#cliques2")
+    .css("display", "flex")
+    .css("max-width", "550px")
+    .css("color", "black")
+    .empty()
+
+
+    dualTypesObj.cliques2.forEach(e => {
+      // if there is only one connection, just display
+      // the dual type
+      if (e.connects.length == 1) {
+        $h1 = $('<h1>Most Effective Dual Type Combo: </h1>')
+        $p1 = $('<p></p>')
+        cliques2.append($h1)
+        .append($p1)
+        $p1.append(createTypeBox(e.vertex, 200, 30, 25))
+        $p1.append(createTypeBox(e.connects[0], 200, 30, 25))
+      }
+      // if there are more, display the vetex separately
+      // from the connecitons
+      else {
+        $subContainer = $('<div class="basicSubContainer"></div>')
+        $h1 = $('<h1>Most Effective Against Any Combo Of: </h1>')
+        $h2 = $('<h1>and</h1>')
+        $p1 = $('<p style="margin: auto; width: 50%;"></p>')
+        $p2 = $('<p></p>')
+        cliques2.append($subContainer)
+        $subContainer.append($h1)
+        .append($p1)
+        .append($h2)
+        .append($p2)
+        $p1.append(createTypeBox(e.vertex, 200, 30, 25))
+        .find(".typeBox").css("margin", "auto")
+        e.connects.forEach(f => {
+          $p2.append(createTypeBox(f, 100, 15, 15))
+          .find(".typeBox").css("margin", "auto")
+        });
+      }
+    });
+  }
+  else {
+    $("#cliques2").css("display", "none")
+  }
+}
+
+function createTypeBox(typeName, width=250, height=35, fontSize=25) {
+  return '<div class="typeBox" data-type="' + typeName + '" style="background:'+ colorScale(typeName) +
+  '; width:' + width + 'px; height: ' + height + 'px; font-size: ' + fontSize + 'px; text-align: center;">' + typeName + '</div>'
 }
 
 function displayTypesX(types, id, title) {
