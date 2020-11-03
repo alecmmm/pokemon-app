@@ -1,5 +1,10 @@
 
-// groups an array by its intersections
+/*
+* Groups an array by its intersections. Groups with the largest number of
+* matched elements are prioritized.
+* e.g. [ [1,2,3], [1,2,3], [1,2,5] ] will be grouped to
+* { subset: [1, 2], matches: [3, 5] }
+*/
 function reduce(array) {
 
   var res = array.getAllIntersections()
@@ -17,7 +22,13 @@ function reduce(array) {
   while (array.length != 0) {
     res.some( e => {
         if (e.subset.isSubset(array[0])) {
-          e.matches.push(array.shift().not(e.subset))
+          // get element that subsumes the subset.
+          // remove intersection
+          var match = array.shift().not(e.subset)
+          // if intersection is not null, push
+          if (match.length != 0) {
+            e.matches.push(match)
+          }
           return true
         }
       }
@@ -51,7 +62,12 @@ Array.prototype.not = function (arr) {
 
 
 Array.prototype.removeNones = function () {
-  return this.filter(e => {return e != null && e != undefined})
+  return this.filter(e => {
+    if (Array.isArray(e)) {
+      return e.length != 0
+    }
+    return e != null && e != undefined
+  })
 };
 
 
@@ -88,8 +104,15 @@ Array.prototype.getIntersection = function (array) {
   return this.filter(e => array.includes(e))
 };
 
-
+/*
+* Gets all the intersections between arrays in a 2D array.
+* In the special case where array size is 1, the array itself
+* is returned
+*/
 Array.prototype.getAllIntersections = function () {
+  if (this.length == 1) {
+    return this
+  }
   var subsets = this.getAllSubsets()
   var res = []
   subsets.forEach(e => {
