@@ -403,6 +403,8 @@ function separateByScore(arr) {
    )
 }
 
+
+
 // debate on what's more effective: should dual attacks both get full values?
 // on one hand, if you already have an effective STAB attack, having more isn't
 // that useful. Especially if you're up against a dual type, it's better to have
