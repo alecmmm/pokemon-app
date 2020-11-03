@@ -64,8 +64,7 @@ h2{
 
 
 #button{
-  width: 100px;
-  height: 50px;
+  /* font-size: 30px; */
 }
 
 #typeDisplays{
@@ -81,14 +80,16 @@ h2{
   background-color: #747474;
   padding: 0px;
   display: flex;
+  justify-content: center;
   flex-direction: column;
-  max-width: 435px;
+  max-width: 500px;
   border-radius: 5px;
 }
 
 .typeBoxContainer > p{
   display: flex;
   flex-direction: row;
+  justify-content: center;
   margin: auto;
   flex-wrap: wrap;
 }
@@ -143,6 +144,21 @@ h2{
 .basicSubContainer{
   border-radius: 3px;
   margin: 5px;
+  padding: 5px;
+  background-color: #747474;
+}
+
+.dualTypesDetail{
+  border-radius: 3px;
+  margin: 5px;
+  display: flex;
+  border: dashed;
+  justify-content: center;
+  align-self: flex-start;
+  border-color: white;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
   padding: 5px;
   background-color: #747474;
 }

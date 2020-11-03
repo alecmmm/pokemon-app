@@ -6,6 +6,7 @@ var typeCoordinates
 var selector1
 var currentSelection = "NORMAL"
 // TODO: encapsulate in object
+var buttonVariable = Math.max;
 var selectorVariables = [[],[]];
 
 // main async function, used to wait for completion of asynch tasks
@@ -277,44 +278,35 @@ function getMostEffectiveDualType(searchType1, searchType2) {
 * groups them into more readable groups
 */
 function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
-  console.log(dualTypes);
 
-  // groups all combinations into a smaller set
-    // var exampleTypes = (() => {
-    //   var res = []
-    //   dualTypes.forEach( e => {
-    //     res.push([e.type1, e.type2])
-    //   });
-    //   return res
-    // })()
+  // var sortedTypes = separateByScore(dualTypes).map(
+  //   e => {
+  //     return {
+  //       score: e,
+  //       edges: dualTypes.filter(f => {
+  //         return f.score == e
+  //       })
+  //     }
+  //   }
+  // )
+  //
+  // sortedTypes = sortedTypes.sort((e, f) => {
+  //   return f.score - e.score
+  // })
+  //
+  // sortedTypes.forEach(e => {
+  //   e.edges = e.edges.map(
+  //     f => {
+  //       return [f.type1, f.type2]
+  //     }
+  //   )
+  // });
+  //
+  // sortedTypes.forEach(e => {
+  //   console.log(e.score, BronKerbosch(e.edges));
+  // });
 
-  var sortedTypes = separateByScore(dualTypes).map(
-    e => {
-      return {
-        score: e,
-        edges: dualTypes.filter(f => {
-          return f.score == e
-        })
-      }
-    }
-  )
-
-  sortedTypes.forEach(e => {
-    e.edges = e.edges.map(
-      f => {
-        return [f.type1, f.type2]
-      }
-    )
-  });
-
-
-  // console.log(sortedTypes);
-
-  sortedTypes.forEach(e => {
-    console.log(BronKerbosch(e.edges));
-  });
-
-
+  // filter dual types based on value
   var sortValue = sort.apply(Math, dualTypes.map(
     function(b) { return b.score; }))
   dualTypes = dualTypes.filter((type) => { return type.score == sortValue});
@@ -331,6 +323,7 @@ function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
     // use Bron Kerbosch algorithm to group and maximal cliques
     var cliques = BronKerbosch(dualTypes)
     // group all groups of size two
+    console.log(cliques);
     var cliques2 = groupByVertex(cliques
     .filter(
       e => {
@@ -345,7 +338,7 @@ function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
       }
     )
 
-    return {cliques: cliques, cliques2: cliques2}
+    return {score: sortValue ,cliques: cliques, cliques2: cliques2}
 
   // further groups any bijective elements
   function groupByVertex(array) {
@@ -551,7 +544,7 @@ function displayAllStats(statsArray) {
 
   displayMostEffectiveTypes(statsArray[3])
 
-  displayDualTypes(filterAndGroupDualTypes(statsArray[4]));
+  displayDualTypes2(filterAndGroupDualTypes(statsArray[4], buttonVariable));
 
 
 
@@ -564,6 +557,11 @@ function displayAllStats(statsArray) {
 
 }
 
+// refreshes everything with most recent ui selections
+function update() {
+  displayAllStats(getAllStats(selectorVariables[0][0], selectorVariables[0][1]));
+  displayDetails(currentSelection)
+}
 
 /*
 *  Displays all effects at given id in given order
@@ -624,11 +622,10 @@ function setUpUI() {
     var sel1 = $("#selector1").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][0] = ui.item.value
-      displayAllStats(getAllStats(selectorVariables[0][0], selectorVariables[0][1]));
       $('#selector2 option').prop("disabled", false)
       $('#selector2 option[value="' + selectorVariables[0][0] +'"]').prop("disabled","true")
       $("#selector2").selectmenu("refresh")
-      displayDetails(currentSelection)
+      update()
       },
     width: 150,
     });
@@ -636,20 +633,29 @@ function setUpUI() {
     $("#selector2").selectmenu({
     change: function(event, ui) {
       selectorVariables[0][1] = ui.item.value
-      displayAllStats(getAllStats(selectorVariables[0][0], selectorVariables[0][1]));
       $('#selector1 option').prop("disabled", false)
       $('#selector1 option[value="' + selectorVariables[0][1] +'"]').prop("disabled","true")
       $("#selector1").selectmenu("refresh")
-      displayDetails(currentSelection)
+      update()
     }, width: 150
   });
 
-  $( "#button" ).button({
-    click: function (event, ui) {
-      console.log(ui.item.value);
-    },
-    width: 300
-  })
+  var $button = $( "#button" ).button()
+  // on click switch direction of sort
+  $button.click(
+    function () {
+      if (buttonVariable == Math.max) {
+        buttonVariable = Math.min
+        $button.html("Sort by Strongest Matches")
+      }
+      else {
+        buttonVariable = Math.max
+        $button.html("Sort by Weakest Matches")
+      }
+      update()
+    }
+  )
+
 
   // set up selector variable before jquery,
   // and run getAllStats once
@@ -700,6 +706,7 @@ function displayDetails(type) {
   $("#typeDetail").empty()
   $("#attackDetail1").empty()
   $("#attackDetail2").empty()
+  .css("display", "none")
   $("#defenseDetail").empty()
 
 // add new contents
@@ -715,8 +722,10 @@ function displayDetails(type) {
 // if there's a type 2
   if(selectorVariables[0][1]){
     $("#attackDetail2").append(
-      "Type 2 attack: " + div1 + formatDecimals(getEffect(selectorVariables[0][1], type)) + div2
-    )
+      "Type 2 attack: " + div1 + formatDecimals(getEffect
+        (selectorVariables[0][1], type)) + div2)
+        .css("display", "inline-block")
+
     $("#defenseDetail").append(
       "Damage taken: " + div1 + formatDecimals(getEffect(type, selectorVariables[0][0]) *
       getEffect(type, selectorVariables[0][1])) + div2
@@ -731,7 +740,53 @@ function displayDetails(type) {
 
 }
 
+function displayDualTypes2(dualTypesObj) {
+  console.log(dualTypesObj  );
+  var cliques = $("#cliques")
+  .empty()
+  .css("display", "flex")
+  .css("max-width", "550px")
+  .append('<h1>Max Dual Score: ' + dualTypesObj.score + '</h1>')
+
+  dualTypesObj.cliques.forEach(e => {
+    var $detail = $('<div class="dualTypesDetail"></div>')
+
+    e.forEach(f => {
+      $detail.append(createTypeBox(f, 100, 15, 15))
+    });
+    cliques.append($detail)
+  });
+
+  dualTypesObj.cliques2.forEach(e => {
+    if (e.connects.length == 1) {
+      var $detail = $('<div class="dualTypesDetail"></div>')
+      $detail.append(createTypeBox(e.vertex, 100, 15, 15))
+      $detail.append(createTypeBox(e.connects[0], 100, 15, 15))
+      cliques.append($detail)
+    }
+
+    else if(e.connects.length > 1) {
+      var $detail = $('<div class="dualTypesDetail"></div>')
+        .css("flex-direction", "column")
+      var $detail2 = $('<div class="dualTypesDetail"></div>')
+      $detail.append(createTypeBox(e.vertex, 100, 15, 15))
+
+      e.connects.forEach(f => {
+        $detail2.append(createTypeBox(f, 100, 15, 15))
+      });
+      $detail.append($detail2)
+      cliques.append($detail)
+    }
+  });
+
+
+
+
+
+}
+
 function displayDualTypes(dualTypesObj) {
+  console.log(dualTypesObj);
   //clique groups greater than 2
   if (dualTypesObj.cliques.length != 0) {
     var cliques = $("#cliques")
@@ -836,11 +891,10 @@ function displayTypes(types, id, title) {
 }
 
 
-// TODO: make top ones bigger
-// put footnotes on where info is derived from
-// change numbers to "1x, 2x, etc."
-// Change "Combined Defense Effect" to "Damage Taken"
-// make dropdown colorful
-// shouldn't have the "select titles". It should be intuitive
-// should have a titled betweento pokeballs
+// TODO: have one page that only shows the most effective/least effective type
+// matchup (showing best of single or double type)
+// have a second page that shows the total breakdown of all single and double
+ // types
+ // have a third page for teams
+
 // j
