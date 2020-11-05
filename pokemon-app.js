@@ -23,7 +23,6 @@ var selectorVariables = [[],[]];
     "#705898","#B8B8D0","#F08030","#6890F0","#78C850","#F8D030","#F85888",
     "#98D8D8","#7038F8","#705848","#EE99AC"])
 
-
   setUpUI();
 
 // var str = ""
@@ -279,6 +278,8 @@ function getMostEffectiveDualType(searchType1, searchType2) {
 */
 function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
 
+
+{
   // var sortedTypes = separateByScore(dualTypes).map(
   //   e => {
   //     return {
@@ -305,7 +306,7 @@ function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
   // sortedTypes.forEach(e => {
   //   console.log(e.score, BronKerbosch(e.edges));
   // });
-
+}
   // filter dual types based on value
   var sortValue = sort.apply(Math, dualTypes.map(
     function(b) { return b.score; }))
@@ -320,25 +321,31 @@ function filterAndGroupDualTypes(dualTypes, sort=Math.max) {
       return res
     })()
 
-    // use Bron Kerbosch algorithm to group and maximal cliques
-    var cliques = BronKerbosch(dualTypes)
+    // use Bron Kerbosch algorithm to group all maximal cliques
+    // use reduce to group these further
+
+    // console.log(BronKerbosch(dualTypes));
+
+    var cliques = reduce(BronKerbosch(dualTypes))
+
     // group all groups of size two
-    console.log(cliques);
-    var cliques2 = groupByVertex(cliques
-    .filter(
-      e => {
-        return e.length == 2
-      }
-    ))
 
-    // get rid of overlap
-    cliques = cliques.filter(
-      e => {
-        return e.length != 2
-      }
-    )
+    // // console.log(cliques);
+    // var cliques2 = groupByVertex(cliques
+    // .filter(
+    //   e => {
+    //     return e.length == 2
+    //   }
+    // ))
+    //
+    // // get rid of overlap
+    // cliques = cliques.filter(
+    //   e => {
+    //     return e.length != 2
+    //   }
+    // )
 
-    return {score: sortValue ,cliques: cliques, cliques2: cliques2}
+    return {score: sortValue ,cliques: cliques}
 
   // further groups any bijective elements
   function groupByVertex(array) {
@@ -546,7 +553,10 @@ function displayAllStats(statsArray) {
 
   displayMostEffectiveTypes(statsArray[3])
 
-  displayDualTypes2(filterAndGroupDualTypes(statsArray[4], buttonVariable));
+  // console.log(filterAndGroupDualTypes(statsArray[4], buttonVariable));
+
+  displayDualTypes3(filterAndGroupDualTypes(statsArray[4], buttonVariable));
+  // displayDualTypes2(filterAndGroupDualTypes(statsArray[4], buttonVariable));
 
 
 
@@ -742,6 +752,41 @@ function displayDetails(type) {
 
 }
 
+function displayDualTypes3(dualTypesObj) {
+  console.log(dualTypesObj);
+  var cliques = $("#cliques")
+  .empty()
+  .css("display", "flex")
+  .css("max-width", "550px")
+  .append('<h1>Max Dual Score: ' + dualTypesObj.score + '</h1>')
+
+  dualTypesObj.cliques.forEach(e => {
+    var $detail = $('<div class="dualTypesDetail"></div>')
+
+    e.subset.forEach(f => {
+      $detail.append(createTypeBox(f, 100, 15, 15))
+    });
+    // if there are matches
+    if (e.matches.length) {
+      var $detail2 = $('<div class="dualTypesDetail"></div>')
+
+      e.matches.forEach(g => {
+        if (g.length > 1) {
+          var $detail3 = $('<div class="dualTypesDetail"></div>')
+          g.forEach(j => {
+            $detail3.append(createTypeBox(j, 100, 15, 15))
+          });
+          $detail2.append($detail3)
+        }
+        $detail2.append(createTypeBox(g, 100, 15, 15))
+      });
+      $detail.append($detail2)
+    }
+    cliques.append($detail)
+  });
+
+}
+
 function displayDualTypes2(dualTypesObj) {
   console.log(dualTypesObj  );
   var cliques = $("#cliques")
@@ -780,11 +825,6 @@ function displayDualTypes2(dualTypesObj) {
       cliques.append($detail)
     }
   });
-
-
-
-
-
 }
 
 function displayDualTypes(dualTypesObj) {

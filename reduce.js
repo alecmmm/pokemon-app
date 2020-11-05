@@ -2,11 +2,14 @@
 /*
 * Groups an array by its intersections. Groups with the largest number of
 * matched elements are prioritized.
-* e.g. [ [1,2,3], [1,2,3], [1,2,5] ] will be grouped to
+* e.g. [ [1,2,3], [1,2,4], [1,2,5], [1,2,5] ] will be grouped to
 * { subset: [1, 2], matches: [3, 5] }
 */
 function reduce(array) {
 
+  // get all intersection, remove duplicates,
+  // remove nones, and create objects with subsets and
+  // matches for each
   var res = array.getAllIntersections()
     .removeDups()
     .removeNones()
@@ -33,11 +36,15 @@ function reduce(array) {
         }
       }
     )
-
   }
+  // if any matches are of size 1, just add to the subset
+  res.forEach(e => {
+    if (e.matches.length == 1) {
+      e.subset.push(e.matches.shift())
+    }
+  });
 
   return res
-
 }
 
 
@@ -107,7 +114,8 @@ Array.prototype.getIntersection = function (array) {
 /*
 * Gets all the intersections between arrays in a 2D array.
 * In the special case where array size is 1, the array itself
-* is returned
+* is returned.In special case where there are no intersections
+* found, then just return the original array
 */
 Array.prototype.getAllIntersections = function () {
   if (this.length == 1) {
@@ -126,5 +134,16 @@ Array.prototype.getAllIntersections = function () {
     }
     res.push(intersection)
   });
+  // special case where no intersections found
+  if (res.length == 0) {
+    return this
+  }
   return res
 };
+
+// console.log(reduce([ [1,2,3], [1,2,4], [1,2,5], [1,2,5,6] ]));
+
+// maybe we should change grouping order with priority:
+// 1 accross the most
+// 2 the most number of matches
+// jjj
